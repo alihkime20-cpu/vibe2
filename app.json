@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "VIBE",
+    "slug": "vibe2",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.vibe.social"
+    }
+  }
+}
