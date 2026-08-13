@@ -5,7 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "com.vibe.social"
     },
@@ -13,6 +15,9 @@
       "eas": {
         "projectId": "31636449-8062-42c4-8861-d892fed8a1ea"
       }
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
