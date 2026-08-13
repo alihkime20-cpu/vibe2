@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import HomeScreen from './screens/HomeScreen';
 import UploadScreen from './screens/UploadScreen';
 import VideoEditorScreen from './screens/VideoEditorScreen';
+import ProfileScreen from './screens/ProfileScreen';
 import {
   StyleSheet,
   Text,
@@ -59,34 +60,7 @@ export default function App() {
     }
 
     if (screen === 'profile') {
-      return (
-        <View style={styles.screen}>
-          <Text style={styles.title}>الملف الشخصي</Text>
-
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>V</Text>
-          </View>
-
-          <Text style={styles.username}>@vibe_user</Text>
-
-          <View style={styles.stats}>
-            <View>
-              <Text style={styles.number}>0</Text>
-              <Text style={styles.statText}>متابعون</Text>
-            </View>
-
-            <View>
-              <Text style={styles.number}>0</Text>
-              <Text style={styles.statText}>متابَعون</Text>
-            </View>
-
-            <View>
-              <Text style={styles.number}>0</Text>
-              <Text style={styles.statText}>إعجابات</Text>
-            </View>
-          </View>
-        </View>
-      );
+      return <ProfileScreen />;
     }
   };
 
