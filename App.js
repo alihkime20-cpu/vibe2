@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import HomeScreen from './screens/HomeScreen';
+import UploadScreen from './screens/UploadScreen';
+import VideoEditorScreen from './screens/VideoEditorScreen';
 import {
   StyleSheet,
   Text,
@@ -27,20 +29,11 @@ export default function App() {
     }
 
     if (screen === 'upload') {
-      return (
-        <View style={styles.screen}>
-          <Text style={styles.title}>إنشاء فيديو</Text>
+      return <UploadScreen onNext={() => setScreen('editor')} />;
+    }
 
-          <TouchableOpacity style={styles.uploadButton}>
-            <Text style={styles.uploadIcon}>＋</Text>
-            <Text style={styles.uploadText}>إضافة فيديو</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.description}>
-            اختر فيديو من جهازك أو قم بتصوير فيديو جديد
-          </Text>
-        </View>
-      );
+    if (screen === 'editor') {
+      return <VideoEditorScreen />;
     }
 
     if (screen === 'notifications') {
