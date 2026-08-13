@@ -1,37 +1,248 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  Alert,
+  Dimensions,
+  FlatList,
+  Pressable,
   SafeAreaView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
 
 import colors from '../constants/colors';
 import dimensions from '../constants/dimensions';
 
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const HEADER_HEIGHT = 65;
+const FEED_ITEM_HEIGHT = Math.max(SCREEN_HEIGHT - HEADER_HEIGHT, 1);
+
+// بيانات محلية مؤقتة تحافظ على نفس العقد المتوقع لاحقًا من services/videos.js.
+const MOCK_VIDEOS = [
+  {
+    id: 'video-1',
+    username: '@vibe_creator',
+    displayName: 'VIBE Creator',
+    description: 'اكتشف لحظات جديدة وشاركها مع مجتمع VIBE #VIBE',
+    videoUrl: 'https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4',
+    likes: 12400,
+    comments: 318,
+    shares: 86,
+    isFollowing: false,
+  },
+  {
+    id: 'video-2',
+    username: '@travel_vibe',
+    displayName: 'Travel Vibe',
+    description: 'كل مكان يحمل قصة تستحق أن تُروى.',
+    videoUrl: 'https://storage.googleapis.com/coverr-main/mp4/Footboys.mp4',
+    likes: 8700,
+    comments: 142,
+    shares: 51,
+    isFollowing: false,
+  },
+  {
+    id: 'video-3',
+    username: '@daily_vibe',
+    displayName: 'Daily Vibe',
+    description: 'اصنع يومك، ثم شارك الـ VIBE الخاص بك.',
+    videoUrl: 'https://storage.googleapis.com/coverr-main/mp4/森林.mp4',
+    likes: 5200,
+    comments: 94,
+    shares: 27,
+    isFollowing: false,
+  },
+];
+
+function formatCount(value) {
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+  return String(value);
+}
+
+function ActionButton({ icon, label, onPress, active = false }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
+    >
+      <Text style={[styles.actionIcon, active && styles.activeActionIcon]}>{icon}</Text>
+      <Text style={styles.actionLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function FeedVideoItem({ item, index, isActive }) {
+  const [isLiked, setIsLiked] = useState(false);
+  const [likes, setLikes] = useState(item.likes);
+  const [isFollowing, setIsFollowing] = useState(item.isFollowing);
+  const [comments, setComments] = useState(item.comments);
+  const [isPlaying, setIsPlaying] = useState(index === 0);
+
+  const player = useVideoPlayer(item.videoUrl, (videoPlayer) => {
+    videoPlayer.loop = true;
+    videoPlayer.muted = false;
+    if (index === 0) videoPlayer.play();
+  });
+
+  useEffect(() => {
+    if (isActive) {
+      player.play();
+      setIsPlaying(true);
+      return;
+    }
+
+    player.pause();
+    setIsPlaying(false);
+  }, [isActive, player]);
+
+  const togglePlayback = useCallback(() => {
+    if (player.playing) {
+      player.pause();
+      setIsPlaying(false);
+    } else {
+      player.play();
+      setIsPlaying(true);
+    }
+  }, [player]);
+
+  const toggleLike = useCallback(() => {
+    setIsLiked((liked) => {
+      setLikes((count) => count + (liked ? -1 : 1));
+      return !liked;
+    });
+  }, []);
+
+  const handleComment = useCallback(() => {
+    setComments((count) => count + 1);
+    Alert.alert('التعليقات', 'واجهة التعليقات ستُربط بالخدمة الخلفية لاحقًا.');
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({
+        message: `شاهد هذا الفيديو على VIBE من ${item.username}`,
+      });
+    } catch (error) {
+      Alert.alert('المشاركة', 'تعذر فتح خيارات المشاركة حاليًا.');
+    }
+  }, [item.username]);
+
+  return (
+    <View style={styles.videoItem}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={isPlaying ? 'إيقاف الفيديو' : 'تشغيل الفيديو'}
+        onPress={togglePlayback}
+        style={styles.videoPressable}
+      >
+        <VideoView
+          player={player}
+          style={styles.video}
+          contentFit="cover"
+          nativeControls={false}
+          allowsFullscreen={false}
+        />
+        <View pointerEvents="none" style={styles.videoShade} />
+        {!isPlaying && (
+          <View pointerEvents="none" style={styles.playOverlay}>
+            <Text style={styles.playOverlayIcon}>▶</Text>
+          </View>
+        )}
+      </Pressable>
+
+      <View style={styles.videoMeta}>
+        <View style={styles.authorRow}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{item.displayName.charAt(0)}</Text>
+          </View>
+          <View style={styles.authorDetails}>
+            <Text style={styles.displayName}>{item.displayName}</Text>
+            <Text style={styles.username}>{item.username}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isFollowing ? 'إلغاء المتابعة' : 'متابعة المستخدم'}
+            onPress={() => setIsFollowing((following) => !following)}
+            style={[styles.followButton, isFollowing && styles.followingButton]}
+          >
+            <Text style={[styles.followText, isFollowing && styles.followingText]}>
+              {isFollowing ? 'يتابع' : 'متابعة'}
+            </Text>
+          </Pressable>
+        </View>
+        <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
+      </View>
+
+      <View style={styles.actionsRail}>
+        <ActionButton
+          icon={isLiked ? '♥' : '♡'}
+          label={formatCount(likes)}
+          onPress={toggleLike}
+          active={isLiked}
+        />
+        <ActionButton icon="◯" label={formatCount(comments)} onPress={handleComment} />
+        <ActionButton icon="↗" label={formatCount(item.shares)} onPress={handleShare} />
+        <ActionButton icon="⋯" label="المزيد" onPress={() => Alert.alert('VIBE', 'المزيد من الخيارات ستتوفر لاحقًا.')} />
+      </View>
+
+      <View pointerEvents="none" style={styles.progressHint}>
+        <View style={styles.progressFill} />
+      </View>
+    </View>
+  );
+}
+
 export default function HomeScreen() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 70 }).current;
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    const firstVisible = viewableItems.find((viewableItem) => viewableItem.isViewable);
+    if (firstVisible?.index != null) setActiveIndex(firstVisible.index);
+  }).current;
+
+  const renderItem = useCallback(
+    ({ item, index }) => (
+      <FeedVideoItem item={item} index={index} isActive={index === activeIndex} />
+    ),
+    [activeIndex]
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.logo}>VIBE</Text>
-
         <View style={styles.headerTabs}>
           <Text style={styles.activeTab}>لك</Text>
           <Text style={styles.tab}>يتابع</Text>
         </View>
       </View>
 
-      <View style={styles.feed}>
-        <Text style={styles.vibe}>VIBE</Text>
-
-        <Text style={styles.title}>
-          ستظهر الفيديوهات هنا
-        </Text>
-
-        <Text style={styles.subtitle}>
-          سنبني Feed الفيديوهات العمودي في الخطوة التالية
-        </Text>
-      </View>
+      <FlatList
+        data={MOCK_VIDEOS}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        pagingEnabled
+        snapToInterval={FEED_ITEM_HEIGHT}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        showsVerticalScrollIndicator={false}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        getItemLayout={(_, index) => ({
+          length: FEED_ITEM_HEIGHT,
+          offset: FEED_ITEM_HEIGHT * index,
+          index,
+        })}
+        initialNumToRender={1}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        removeClippedSubviews
+      />
     </SafeAreaView>
   );
 }
@@ -43,13 +254,15 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    height: 65,
+    height: HEADER_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: dimensions.padding.medium,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    backgroundColor: colors.background,
+    zIndex: 2,
   },
 
   logo: {
@@ -75,31 +288,170 @@ const styles = StyleSheet.create({
     fontSize: dimensions.fontSize.medium,
   },
 
-  feed: {
+  videoItem: {
+    height: FEED_ITEM_HEIGHT,
+    width: SCREEN_WIDTH,
+    backgroundColor: colors.background,
+  },
+
+  videoPressable: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+
+  video: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  videoShade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.18)',
+  },
+
+  playOverlay: {
+    position: 'absolute',
+    top: '46%',
+    left: '46%',
+    width: 56,
+    height: 56,
+    borderRadius: dimensions.radius.round,
     alignItems: 'center',
-    padding: dimensions.padding.large,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
 
-  vibe: {
+  playOverlayIcon: {
     color: colors.text,
-    fontSize: dimensions.fontSize.huge,
-    fontWeight: '900',
-    letterSpacing: 8,
+    fontSize: dimensions.fontSize.title,
+    marginLeft: 3,
   },
 
-  title: {
+  videoMeta: {
+    position: 'absolute',
+    right: dimensions.padding.medium,
+    left: dimensions.padding.medium,
+    bottom: dimensions.padding.large,
+    paddingRight: 58,
+  },
+
+  authorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: dimensions.radius.round,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.text,
+  },
+
+  avatarText: {
     color: colors.text,
     fontSize: dimensions.fontSize.large,
-    fontWeight: 'bold',
-    marginTop: 20,
+    fontWeight: '900',
   },
 
-  subtitle: {
-    color: colors.textMuted,
+  authorDetails: {
+    flex: 1,
+    marginHorizontal: dimensions.padding.small,
+  },
+
+  displayName: {
+    color: colors.text,
+    fontSize: dimensions.fontSize.medium,
+    fontWeight: 'bold',
+  },
+
+  username: {
+    color: colors.textSecondary,
     fontSize: dimensions.fontSize.small,
+    marginTop: 2,
+  },
+
+  followButton: {
+    minWidth: 72,
+    paddingHorizontal: dimensions.padding.small,
+    paddingVertical: 7,
+    borderRadius: dimensions.radius.small,
+    borderWidth: 1,
+    borderColor: colors.text,
+    alignItems: 'center',
+  },
+
+  followingButton: {
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceLight,
+  },
+
+  followText: {
+    color: colors.text,
+    fontSize: dimensions.fontSize.small,
+    fontWeight: 'bold',
+  },
+
+  followingText: {
+    color: colors.textSecondary,
+  },
+
+  description: {
+    color: colors.text,
+    fontSize: dimensions.fontSize.medium,
+    lineHeight: 21,
+    marginTop: dimensions.padding.small,
+  },
+
+  actionsRail: {
+    position: 'absolute',
+    right: dimensions.padding.medium,
+    bottom: dimensions.padding.large + 8,
+    alignItems: 'center',
+    gap: dimensions.padding.medium,
+  },
+
+  actionButton: {
+    minWidth: 42,
+    alignItems: 'center',
+  },
+
+  pressed: {
+    opacity: 0.6,
+  },
+
+  actionIcon: {
+    color: colors.text,
+    fontSize: 30,
+    lineHeight: 32,
     textAlign: 'center',
-    marginTop: 8,
+  },
+
+  activeActionIcon: {
+    color: colors.danger,
+  },
+
+  actionLabel: {
+    color: colors.text,
+    fontSize: dimensions.fontSize.small,
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+
+  progressHint: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    left: 0,
+    height: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+
+  progressFill: {
+    width: '35%',
+    height: 2,
+    backgroundColor: colors.text,
   },
 });
