@@ -201,7 +201,7 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth }) {
   );
 }
 
-export default function HomeScreen() {
+export default function HomeScreen({ onOpenSearch }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const topInset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0;
@@ -237,6 +237,14 @@ export default function HomeScreen() {
           <Text style={styles.activeTab}>لك</Text>
           <Text style={styles.tab}>يتابع</Text>
         </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="فتح البحث"
+          onPress={onOpenSearch}
+          style={({ pressed }) => [styles.searchButton, pressed && styles.pressed]}
+        >
+          <Text style={styles.searchIcon}>⌕</Text>
+        </Pressable>
       </View>
 
       <FlatList
@@ -280,6 +288,23 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.background,
     zIndex: 2,
+  },
+
+  searchButton: {
+    width: 38,
+    height: 38,
+    borderRadius: dimensions.radius.round,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+
+  searchIcon: {
+    color: colors.text,
+    fontSize: 27,
+    lineHeight: 30,
   },
 
   logo: {

@@ -4,6 +4,8 @@ import UploadScreen from './screens/UploadScreen';
 import VideoEditorScreen from './screens/VideoEditorScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import {
+  Modal,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -13,10 +15,11 @@ import {
 export default function App() {
   const [screen, setScreen] = useState('home');
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [createMenuOpen, setCreateMenuOpen] = useState(false);
 
   const renderScreen = () => {
     if (screen === 'home') {
-      return <HomeScreen />;
+      return <HomeScreen onOpenSearch={() => setScreen('search')} />;
     }
 
     if (screen === 'search') {
@@ -28,6 +31,10 @@ export default function App() {
           </View>
         </View>
       );
+    }
+
+    if (screen === 'live') {
+      return <LivePlaceholder onBack={() => setScreen('home')} />;
     }
 
     if (screen === 'upload') {
@@ -81,16 +88,11 @@ export default function App() {
           onPress={() => setScreen('home')}
         />
 
-        <NavButton
-          icon="⌕"
-          text="بحث"
-          active={screen === 'search'}
-          onPress={() => setScreen('search')}
-        />
-
         <TouchableOpacity
           style={styles.plusButton}
-          onPress={() => setScreen('upload')}
+          accessibilityRole="button"
+          accessibilityLabel="إنشاء محتوى"
+          onPress={() => setCreateMenuOpen(true)}
         >
           <Text style={styles.plus}>+</Text>
         </TouchableOpacity>
@@ -111,6 +113,66 @@ export default function App() {
 
       </View>
 
+      <CreateMenu
+        visible={createMenuOpen}
+        onClose={() => setCreateMenuOpen(false)}
+        onCreateVideo={() => {
+          setCreateMenuOpen(false);
+          setScreen('upload');
+        }}
+        onStartLive={() => {
+          setCreateMenuOpen(false);
+          setScreen('live');
+        }}
+      />
+    </View>
+  );
+}
+
+function CreateMenu({ visible, onClose, onCreateVideo, onStartLive }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalRoot}>
+        <Pressable style={styles.modalBackdrop} onPress={onClose} />
+        <View style={styles.createSheet}>
+          <View style={styles.sheetHandle} />
+          <Text style={styles.sheetTitle}>إنشاء محتوى</Text>
+          <Text style={styles.sheetSubtitle}>اختر الطريقة التي تريد أن تبدأ بها</Text>
+          <Pressable onPress={onCreateVideo} style={({ pressed }) => [styles.createOption, pressed && styles.optionPressed]}>
+            <View style={styles.optionIcon}><Text style={styles.optionIconText}>▶</Text></View>
+            <View style={styles.optionCopy}>
+              <Text style={styles.optionTitle}>إنشاء فيديو</Text>
+              <Text style={styles.optionSubtitle}>اختر فيديو أو سجّل لحظة جديدة</Text>
+            </View>
+            <Text style={styles.optionArrow}>‹</Text>
+          </Pressable>
+          <Pressable onPress={onStartLive} style={({ pressed }) => [styles.createOption, pressed && styles.optionPressed]}>
+            <View style={[styles.optionIcon, styles.liveIcon]}><Text style={styles.optionIconText}>●</Text></View>
+            <View style={styles.optionCopy}>
+              <Text style={styles.optionTitle}>بدء بث مباشر</Text>
+              <Text style={styles.optionSubtitle}>الميزة ستكون متاحة قريبًا</Text>
+            </View>
+            <Text style={styles.optionArrow}>‹</Text>
+          </Pressable>
+          <Pressable onPress={onClose} style={styles.cancelButton}>
+            <Text style={styles.cancelText}>إلغاء</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function LivePlaceholder({ onBack }) {
+  return (
+    <View style={styles.liveScreen}>
+      <Text style={styles.liveBadge}>● LIVE</Text>
+      <Text style={styles.liveTitle}>البث المباشر</Text>
+      <Text style={styles.liveMessage}>سيتم تجهيز البث المباشر قريبًا.</Text>
+      <Text style={styles.liveHint}>لا توجد خدمة بث حقيقية مرتبطة حاليًا.</Text>
+      <TouchableOpacity onPress={onBack} style={styles.liveBackButton}>
+        <Text style={styles.liveBackText}>العودة للرئيسية</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -272,6 +334,7 @@ const styles = StyleSheet.create({
 
   bottomBar: {
     height: 75,
+    paddingBottom: 4,
     backgroundColor: '#050505',
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -315,5 +378,145 @@ const styles = StyleSheet.create({
     fontSize: 30,
     lineHeight: 32,
     fontWeight: 'bold',
+  },
+
+  modalRoot: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.62)',
+  },
+  createSheet: {
+    paddingTop: 10,
+    paddingHorizontal: 18,
+    paddingBottom: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: '#111',
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 42,
+    height: 4,
+    borderRadius: 4,
+    backgroundColor: '#555',
+    marginBottom: 18,
+  },
+  sheetTitle: {
+    color: '#fff',
+    fontSize: 21,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  sheetSubtitle: {
+    color: '#888',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 18,
+  },
+  createOption: {
+    minHeight: 72,
+    borderRadius: 16,
+    backgroundColor: '#1b1b1b',
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  optionPressed: {
+    opacity: 0.72,
+  },
+  optionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  liveIcon: {
+    backgroundColor: '#ff3040',
+  },
+  optionIconText: {
+    color: '#000',
+    fontSize: 22,
+  },
+  optionCopy: {
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  optionTitle: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  optionSubtitle: {
+    color: '#888',
+    fontSize: 11,
+    marginTop: 5,
+  },
+  optionArrow: {
+    color: '#777',
+    fontSize: 28,
+  },
+  cancelButton: {
+    minHeight: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#242424',
+    marginTop: 4,
+  },
+  cancelText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  liveScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: '#000',
+  },
+  liveBadge: {
+    color: '#ff3040',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  liveTitle: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '900',
+    marginTop: 16,
+  },
+  liveMessage: {
+    color: '#ddd',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 14,
+  },
+  liveHint: {
+    color: '#777',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  liveBackButton: {
+    minHeight: 50,
+    minWidth: 190,
+    borderRadius: 14,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 26,
+  },
+  liveBackText: {
+    color: '#000',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
