@@ -3,21 +3,25 @@ import {
   Alert,
   Dimensions,
   FlatList,
+  Platform,
   Pressable,
   SafeAreaView,
   Share,
+  StatusBar,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
 import colors from '../constants/colors';
 import dimensions from '../constants/dimensions';
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
-const HEADER_HEIGHT = 65;
-const FEED_ITEM_HEIGHT = Math.max(SCREEN_HEIGHT - HEADER_HEIGHT, 1);
+const HEADER_HEIGHT = 56;
+const BOTTOM_NAV_HEIGHT = 75;
+const BOTTOM_SAFE_GUTTER = 8;
+const { width: INITIAL_WIDTH } = Dimensions.get('window');
 
 // بيانات محلية مؤقتة تحافظ على نفس العقد المتوقع لاحقًا من services/videos.js.
 const MOCK_VIDEOS = [
@@ -76,7 +80,7 @@ function ActionButton({ icon, label, onPress, active = false }) {
   );
 }
 
-function FeedVideoItem({ item, index, isActive }) {
+function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth }) {
   const [isLiked, setIsLiked] = useState(false);
   const [likes, setLikes] = useState(item.likes);
   const [isFollowing, setIsFollowing] = useState(item.isFollowing);
@@ -133,7 +137,7 @@ function FeedVideoItem({ item, index, isActive }) {
   }, [item.username]);
 
   return (
-    <View style={styles.videoItem}>
+    <View style={[styles.videoItem, { height: itemHeight, width: itemWidth }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={isPlaying ? 'إيقاف الفيديو' : 'تشغيل الفيديو'}
@@ -199,6 +203,13 @@ function FeedVideoItem({ item, index, isActive }) {
 
 export default function HomeScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const topInset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0;
+  const headerHeight = HEADER_HEIGHT + topInset;
+  const feedHeight = Math.max(
+    windowHeight - headerHeight - BOTTOM_NAV_HEIGHT - BOTTOM_SAFE_GUTTER,
+    1
+  );
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 70 }).current;
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     const firstVisible = viewableItems.find((viewableItem) => viewableItem.isViewable);
@@ -206,15 +217,21 @@ export default function HomeScreen() {
   }).current;
 
   const renderItem = useCallback(
-    ({ item, index }) => (
-      <FeedVideoItem item={item} index={index} isActive={index === activeIndex} />
+      ({ item, index }) => (
+      <FeedVideoItem
+        item={item}
+        index={index}
+        isActive={index === activeIndex}
+        itemHeight={feedHeight}
+        itemWidth={windowWidth || INITIAL_WIDTH}
+      />
     ),
-    [activeIndex]
+    [activeIndex, feedHeight, windowWidth]
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { height: headerHeight, paddingTop: topInset }]}>
         <Text style={styles.logo}>VIBE</Text>
         <View style={styles.headerTabs}>
           <Text style={styles.activeTab}>لك</Text>
@@ -227,15 +244,15 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         pagingEnabled
-        snapToInterval={FEED_ITEM_HEIGHT}
+        snapToInterval={feedHeight}
         snapToAlignment="start"
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         getItemLayout={(_, index) => ({
-          length: FEED_ITEM_HEIGHT,
-          offset: FEED_ITEM_HEIGHT * index,
+          length: feedHeight,
+          offset: feedHeight * index,
           index,
         })}
         initialNumToRender={1}
@@ -289,8 +306,6 @@ const styles = StyleSheet.create({
   },
 
   videoItem: {
-    height: FEED_ITEM_HEIGHT,
-    width: SCREEN_WIDTH,
     backgroundColor: colors.background,
   },
 
@@ -330,7 +345,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: dimensions.padding.medium,
     left: dimensions.padding.medium,
-    bottom: dimensions.padding.large,
+    bottom: 28,
     paddingRight: 58,
   },
 
@@ -408,7 +423,7 @@ const styles = StyleSheet.create({
   actionsRail: {
     position: 'absolute',
     right: dimensions.padding.medium,
-    bottom: dimensions.padding.large + 8,
+    bottom: 22,
     alignItems: 'center',
     gap: dimensions.padding.medium,
   },
