@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  BackHandler,
   Dimensions,
   Pressable,
   SafeAreaView,
@@ -64,10 +65,35 @@ export default function UploadScreen({ onNext }) {
   const [isRecording, setIsRecording] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
+  const isClosingCameraRef = useRef(false);
+
+  const closeCamera = useCallback(() => {
+    isClosingCameraRef.current = true;
+    if (isRecording) {
+      cameraRef.current?.stopRecording();
+      setIsRecording(false);
+    }
+    setCameraOpen(false);
+  }, [isRecording]);
+
+  useEffect(() => {
+    if (!cameraOpen) return undefined;
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        closeCamera();
+        return true;
+      }
+    );
+
+    return () => subscription.remove();
+  }, [cameraOpen, closeCamera]);
 
   useEffect(() => {
     return () => {
-      setCameraOpen(false);
+      isClosingCameraRef.current = true;
+      cameraRef.current?.stopRecording();
     };
   }, []);
 
@@ -99,15 +125,17 @@ export default function UploadScreen({ onNext }) {
       }
     }
     setSelectedVideo(null);
+    isClosingCameraRef.current = false;
     setCameraOpen(true);
   }, [cameraPermission?.granted, requestCameraPermission]);
 
   const recordVideo = useCallback(async () => {
     if (!cameraRef.current || isRecording) return;
+    isClosingCameraRef.current = false;
     setIsRecording(true);
     try {
       const result = await cameraRef.current.recordAsync({ maxDuration: 60 });
-      if (result?.uri) {
+      if (result?.uri && !isClosingCameraRef.current) {
         setSelectedVideo({
           uri: result.uri,
           fileName: `vibe-${Date.now()}.mp4`,
@@ -136,7 +164,7 @@ export default function UploadScreen({ onNext }) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.cameraHeader}>
-          <Pressable onPress={() => setCameraOpen(false)} style={styles.closeButton}>
+          <Pressable onPress={closeCamera} style={styles.closeButton}>
             <Text style={styles.closeText}>إلغاء</Text>
           </Pressable>
           <Text style={styles.cameraTitle}>تصوير فيديو</Text>
