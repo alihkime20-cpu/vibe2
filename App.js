@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import HomeScreen from './screens/HomeScreen';
 import {
   StyleSheet,
   Text,
@@ -11,17 +12,7 @@ export default function App() {
 
   const renderScreen = () => {
     if (screen === 'home') {
-      return (
-        <View style={styles.screen}>
-          <Text style={styles.title}>VIBE</Text>
-          <Text style={styles.subtitle}>الرئيسية</Text>
-
-          <View style={styles.videoBox}>
-            <Text style={styles.vibe}>VIBE</Text>
-            <Text style={styles.placeholder}>ستظهر الفيديوهات هنا</Text>
-          </View>
-        </View>
-      );
+      return <HomeScreen />;
     }
 
     if (screen === 'search') {
