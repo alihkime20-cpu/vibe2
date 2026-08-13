@@ -8,6 +8,11 @@
     "assetBundlePatterns": ["**/*"],
     "android": {
       "package": "com.vibe.social"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "31636449-8062-42c4-8861-d892fed8a1ea"
+      }
     }
   }
 }
