@@ -11,6 +11,7 @@ import {
 
 export default function App() {
   const [screen, setScreen] = useState('home');
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
   const renderScreen = () => {
     if (screen === 'home') {
@@ -29,11 +30,23 @@ export default function App() {
     }
 
     if (screen === 'upload') {
-      return <UploadScreen onNext={() => setScreen('editor')} />;
+      return (
+        <UploadScreen
+          onNext={(video) => {
+            setSelectedVideo(video);
+            setScreen('editor');
+          }}
+        />
+      );
     }
 
     if (screen === 'editor') {
-      return <VideoEditorScreen />;
+      return (
+        <VideoEditorScreen
+          video={selectedVideo}
+          onBack={() => setScreen('upload')}
+        />
+      );
     }
 
     if (screen === 'notifications') {
