@@ -221,11 +221,15 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBotto
 
 export default function HomeScreen({ onOpenSearch }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const headerHeight = HEADER_HEIGHT + insets.top;
   const bottomBarHeight = BOTTOM_NAV_HEIGHT + insets.bottom;
-  const feedHeight = Math.max(windowHeight - headerHeight - bottomBarHeight, 1);
+  const fallbackFeedHeight = Math.max(windowHeight - headerHeight - bottomBarHeight, 1);
+  const feedHeight = contentHeight > 0
+    ? Math.max(contentHeight - headerHeight, 1)
+    : fallbackFeedHeight;
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 70 }).current;
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     const firstVisible = viewableItems.find((viewableItem) => viewableItem.isViewable);
@@ -247,7 +251,14 @@ export default function HomeScreen({ onOpenSearch }) {
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={({ nativeEvent: { layout } }) => {
+        if (layout.height > 0 && layout.height !== contentHeight) {
+          setContentHeight(layout.height);
+        }
+      }}
+    >
       <View style={[styles.header, { height: headerHeight, paddingTop: insets.top }]}>
 
         <Text style={styles.logo}>VIBE</Text>
@@ -286,6 +297,7 @@ export default function HomeScreen({ onOpenSearch }) {
         maxToRenderPerBatch={2}
         windowSize={3}
         removeClippedSubviews
+        overScrollMode="never"
       />
     </View>
   );
