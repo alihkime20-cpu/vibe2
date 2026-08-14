@@ -75,7 +75,7 @@ function ActionButton({ icon, label, onPress, active = false }) {
   );
 }
 
-function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth }) {
+function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBottom }) {
   const [isLiked, setIsLiked] = useState(false);
   const [likes, setLikes] = useState(item.likes);
   const [isFollowing, setIsFollowing] = useState(item.isFollowing);
@@ -131,66 +131,74 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth }) {
     }
   }, [item.username]);
 
+  const frameWidth = Math.min(itemWidth, itemHeight * (9 / 16));
+  const frameHeight = Math.min(itemHeight, itemWidth * (16 / 9));
+
   return (
     <View style={[styles.videoItem, { height: itemHeight, width: itemWidth }]}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={isPlaying ? 'إيقاف الفيديو' : 'تشغيل الفيديو'}
-        onPress={togglePlayback}
-        style={styles.videoPressable}
-      >
-        <VideoView
-          player={player}
-          style={styles.video}
-          contentFit="cover"
-          nativeControls={false}
-          allowsFullscreen={false}
-        />
-        <View pointerEvents="none" style={styles.videoShade} />
-        {!isPlaying && (
-          <View pointerEvents="none" style={styles.playOverlay}>
-            <Text style={styles.playOverlayIcon}>▶</Text>
+      <View style={styles.videoCanvas}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={isPlaying ? 'إيقاف الفيديو' : 'تشغيل الفيديو'}
+          onPress={togglePlayback}
+          style={[styles.videoFrame, { width: frameWidth, height: frameHeight }]}
+        >
+          <VideoView
+            player={player}
+            style={styles.video}
+            contentFit="cover"
+            nativeControls={false}
+            allowsFullscreen={false}
+          />
+          <View pointerEvents="none" style={styles.videoShade} />
+          {!isPlaying && (
+            <View pointerEvents="none" style={styles.playOverlay}>
+              <Text style={styles.playOverlayIcon}>▶</Text>
+            </View>
+          )}
+          <View pointerEvents="none" style={styles.progressHint}>
+            <View style={styles.progressFill} />
           </View>
-        )}
-      </Pressable>
 
-      <View style={styles.videoMeta}>
-        <View style={styles.authorRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{item.displayName.charAt(0)}</Text>
+          <View pointerEvents="box-none" style={styles.videoOverlay}>
+            <View style={[styles.overlayBottom, { paddingBottom: safeBottom }]}>
+              <View style={styles.videoMeta}>
+                <View style={styles.authorRow}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{item.displayName.charAt(0)}</Text>
+                  </View>
+                  <View style={styles.authorDetails}>
+                    <Text numberOfLines={1} style={styles.displayName}>{item.displayName}</Text>
+                    <Text numberOfLines={1} style={styles.username}>{item.username}</Text>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={isFollowing ? 'إلغاء المتابعة' : 'متابعة المستخدم'}
+                    onPress={() => setIsFollowing((following) => !following)}
+                    style={[styles.followButton, isFollowing && styles.followingButton]}
+                  >
+                    <Text style={[styles.followText, isFollowing && styles.followingText]}>
+                      {isFollowing ? 'يتابع' : 'متابعة'}
+                    </Text>
+                  </Pressable>
+                </View>
+                <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
+              </View>
+
+              <View style={styles.actionsRail}>
+                <ActionButton
+                  icon={isLiked ? '♥' : '♡'}
+                  label={formatCount(likes)}
+                  onPress={toggleLike}
+                  active={isLiked}
+                />
+                <ActionButton icon="◯" label={formatCount(comments)} onPress={handleComment} />
+                <ActionButton icon="↗" label={formatCount(item.shares)} onPress={handleShare} />
+                <ActionButton icon="⋯" label="المزيد" onPress={() => Alert.alert('VIBE', 'المزيد من الخيارات ستتوفر لاحقًا.')} />
+              </View>
+            </View>
           </View>
-          <View style={styles.authorDetails}>
-            <Text style={styles.displayName}>{item.displayName}</Text>
-            <Text style={styles.username}>{item.username}</Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={isFollowing ? 'إلغاء المتابعة' : 'متابعة المستخدم'}
-            onPress={() => setIsFollowing((following) => !following)}
-            style={[styles.followButton, isFollowing && styles.followingButton]}
-          >
-            <Text style={[styles.followText, isFollowing && styles.followingText]}>
-              {isFollowing ? 'يتابع' : 'متابعة'}
-            </Text>
-          </Pressable>
-        </View>
-        <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
-      </View>
-
-      <View style={styles.actionsRail}>
-        <ActionButton
-          icon={isLiked ? '♥' : '♡'}
-          label={formatCount(likes)}
-          onPress={toggleLike}
-          active={isLiked}
-        />
-        <ActionButton icon="◯" label={formatCount(comments)} onPress={handleComment} />
-        <ActionButton icon="↗" label={formatCount(item.shares)} onPress={handleShare} />
-        <ActionButton icon="⋯" label="المزيد" onPress={() => Alert.alert('VIBE', 'المزيد من الخيارات ستتوفر لاحقًا.')} />
-      </View>
-
-      <View pointerEvents="none" style={styles.progressHint}>
-        <View style={styles.progressFill} />
+        </Pressable>
       </View>
     </View>
   );
@@ -217,9 +225,10 @@ export default function HomeScreen({ onOpenSearch }) {
         isActive={index === activeIndex}
         itemHeight={feedHeight}
         itemWidth={windowWidth}
+        safeBottom={Math.max(dimensions.padding.small, insets.bottom)}
       />
     ),
-    [activeIndex, feedHeight, windowWidth]
+    [activeIndex, feedHeight, insets.bottom, windowWidth]
   );
 
   return (
@@ -242,6 +251,7 @@ export default function HomeScreen({ onOpenSearch }) {
       </View>
 
       <FlatList
+        style={styles.feed}
         data={MOCK_VIDEOS}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
@@ -324,12 +334,26 @@ const styles = StyleSheet.create({
     fontSize: dimensions.fontSize.medium,
   },
 
-  videoItem: {
-    backgroundColor: colors.background,
+  feed: {
+    flex: 1,
   },
 
-  videoPressable: {
+  videoItem: {
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  videoCanvas: {
     flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  videoFrame: {
+    position: 'relative',
+    overflow: 'hidden',
     backgroundColor: colors.surface,
   },
 
@@ -360,12 +384,24 @@ const styles = StyleSheet.create({
     marginLeft: 3,
   },
 
-  videoMeta: {
+  videoOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+  },
+
+  overlayBottom: {
     position: 'absolute',
     right: dimensions.padding.medium,
+    bottom: 0,
     left: dimensions.padding.medium,
-    bottom: 18,
-    paddingRight: 58,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+
+  videoMeta: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: dimensions.padding.small,
   },
 
   authorRow: {
@@ -440,10 +476,9 @@ const styles = StyleSheet.create({
   },
 
   actionsRail: {
-    position: 'absolute',
-    right: dimensions.padding.medium,
-    bottom: 16,
+    width: 52,
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: dimensions.padding.medium,
   },
 
