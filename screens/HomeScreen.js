@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Image,
   Pressable,
   Share,
   StyleSheet,
@@ -18,8 +19,29 @@ import dimensions from '../constants/dimensions';
 const HEADER_HEIGHT = 56;
 const BOTTOM_NAV_HEIGHT = 75;
 
-// سيُربط هذا المصدر لاحقًا بواجهة الـBackend بعد تجهيزها.
-const FEED_VIDEOS = [];
+// مصدر مؤقت لمنشور الصورة المرفق إلى أن يتم ربط الـFeed بالـBackend.
+const FEED_ITEMS = [
+  {
+    id: 'vibe-image-1',
+    type: 'image',
+    image: require('../assets/feed/vibe-post.png'),
+  },
+];
+
+function FeedImageItem({ item, itemHeight, itemWidth }) {
+  return (
+    <View style={[styles.videoItem, { height: itemHeight, width: itemWidth }]}>
+      <View style={styles.videoCanvas}>
+        <Image
+          source={item.image}
+          style={styles.feedImage}
+          resizeMode="contain"
+          accessibilityLabel="منشور صورة في VIBE"
+        />
+      </View>
+    </View>
+  );
+}
 
 function formatCount(value) {
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -203,16 +225,22 @@ export default function HomeScreen({ onOpenSearch }) {
   }).current;
 
   const renderItem = useCallback(
-      ({ item, index }) => (
-      <FeedVideoItem
-        item={item}
-        index={index}
-        isActive={index === activeIndex}
-        itemHeight={feedHeight}
-        itemWidth={windowWidth}
-        safeBottom={Math.max(dimensions.padding.small, insets.bottom)}
-      />
-    ),
+      ({ item, index }) => item.type === 'image' ? (
+        <FeedImageItem
+          item={item}
+          itemHeight={feedHeight}
+          itemWidth={windowWidth}
+        />
+      ) : (
+        <FeedVideoItem
+          item={item}
+          index={index}
+          isActive={index === activeIndex}
+          itemHeight={feedHeight}
+          itemWidth={windowWidth}
+          safeBottom={Math.max(dimensions.padding.small, insets.bottom)}
+        />
+      ),
     [activeIndex, feedHeight, insets.bottom, windowWidth]
   );
 
@@ -244,7 +272,7 @@ export default function HomeScreen({ onOpenSearch }) {
 
       <FlatList
         style={styles.feed}
-        data={FEED_VIDEOS}
+        data={FEED_ITEMS}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListEmptyComponent={(
@@ -253,7 +281,7 @@ export default function HomeScreen({ onOpenSearch }) {
             <Text style={styles.emptyFeedText}>ستظهر فيديوهات VIBE هنا بعد إضافتها.</Text>
           </View>
         )}
-        contentContainerStyle={FEED_VIDEOS.length === 0 ? styles.emptyFeedContent : undefined}
+        contentContainerStyle={FEED_ITEMS.length === 0 ? styles.emptyFeedContent : undefined}
         pagingEnabled
         snapToInterval={feedHeight}
         snapToAlignment="start"
@@ -362,6 +390,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: dimensions.fontSize.medium,
     textAlign: 'center',
+  },
+
+  feedImage: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.background,
   },
 
   videoItem: {
