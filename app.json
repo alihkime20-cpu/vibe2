@@ -8,8 +8,19 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "splash": {
+      "image": "./assets/vibe-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "icon": "./assets/vibe-icon.png",
     "android": {
-      "package": "com.vibe.social"
+      "package": "com.vibe.social",
+      "icon": "./assets/vibe-icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/vibe-icon.png",
+        "backgroundColor": "#000000"
+      }
     },
     "extra": {
       "eas": {
