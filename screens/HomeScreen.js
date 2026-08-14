@@ -131,17 +131,14 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBotto
     }
   }, [item.username]);
 
-  const frameWidth = Math.min(itemWidth, itemHeight * (9 / 16));
-  const frameHeight = Math.min(itemHeight, itemWidth * (16 / 9));
-
-  return (
+    return (
     <View style={[styles.videoItem, { height: itemHeight, width: itemWidth }]}>
       <View style={styles.videoCanvas}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={isPlaying ? 'إيقاف الفيديو' : 'تشغيل الفيديو'}
           onPress={togglePlayback}
-          style={[styles.videoFrame, { width: frameWidth, height: frameHeight }]}
+          style={styles.videoFrame}
         >
           <VideoView
             player={player}
@@ -347,11 +344,12 @@ const styles = StyleSheet.create({
   videoCanvas: {
     flex: 1,
     width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
   videoFrame: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
     position: 'relative',
     overflow: 'hidden',
     backgroundColor: colors.surface,
