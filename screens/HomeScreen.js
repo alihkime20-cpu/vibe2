@@ -357,6 +357,7 @@ const styles = StyleSheet.create({
 
   video: {
     ...StyleSheet.absoluteFillObject,
+    transform: [{ scale: 1.35 }],
   },
 
   videoShade: {
