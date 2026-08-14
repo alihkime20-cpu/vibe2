@@ -18,42 +18,8 @@ import dimensions from '../constants/dimensions';
 const HEADER_HEIGHT = 56;
 const BOTTOM_NAV_HEIGHT = 75;
 
-// بيانات محلية مؤقتة تحافظ على نفس العقد المتوقع لاحقًا من services/videos.js.
-const MOCK_VIDEOS = [
-  {
-    id: 'video-1',
-    username: '@vibe_creator',
-    displayName: 'VIBE Creator',
-    description: 'اكتشف لحظات جديدة وشاركها مع مجتمع VIBE #VIBE',
-    videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
-    likes: 12400,
-    comments: 318,
-    shares: 86,
-    isFollowing: false,
-  },
-  {
-    id: 'video-2',
-    username: '@travel_vibe',
-    displayName: 'Travel Vibe',
-    description: 'كل مكان يحمل قصة تستحق أن تُروى.',
-    videoUrl: 'https://media.w3.org/2010/05/bunny/trailer.mp4',
-    likes: 8700,
-    comments: 142,
-    shares: 51,
-    isFollowing: false,
-  },
-  {
-    id: 'video-3',
-    username: '@daily_vibe',
-    displayName: 'Daily Vibe',
-    description: 'اصنع يومك، ثم شارك الـ VIBE الخاص بك.',
-    videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
-    likes: 5200,
-    comments: 94,
-    shares: 27,
-    isFollowing: false,
-  },
-];
+// سيُربط هذا المصدر لاحقًا بواجهة الـBackend بعد تجهيزها.
+const FEED_VIDEOS = [];
 
 function formatCount(value) {
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -278,9 +244,16 @@ export default function HomeScreen({ onOpenSearch }) {
 
       <FlatList
         style={styles.feed}
-        data={MOCK_VIDEOS}
+        data={FEED_VIDEOS}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        ListEmptyComponent={(
+          <View style={styles.emptyFeed}>
+            <Text style={styles.emptyFeedTitle}>لا توجد فيديوهات حاليًا</Text>
+            <Text style={styles.emptyFeedText}>ستظهر فيديوهات VIBE هنا بعد إضافتها.</Text>
+          </View>
+        )}
+        contentContainerStyle={FEED_VIDEOS.length === 0 ? styles.emptyFeedContent : undefined}
         pagingEnabled
         snapToInterval={feedHeight}
         snapToAlignment="start"
@@ -363,6 +336,32 @@ const styles = StyleSheet.create({
 
   feed: {
     flex: 1,
+  },
+
+  emptyFeedContent: {
+    flexGrow: 1,
+  },
+
+  emptyFeed: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: dimensions.padding.large,
+    backgroundColor: colors.background,
+  },
+
+  emptyFeedTitle: {
+    color: colors.text,
+    fontSize: dimensions.fontSize.large,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+
+  emptyFeedText: {
+    marginTop: dimensions.padding.small,
+    color: colors.textMuted,
+    fontSize: dimensions.fontSize.medium,
+    textAlign: 'center',
   },
 
   videoItem: {
