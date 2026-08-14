@@ -88,26 +88,36 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBotto
     if (index === 0) videoPlayer.play();
   });
 
+  const backgroundPlayer = useVideoPlayer(item.videoUrl, (videoPlayer) => {
+    videoPlayer.loop = true;
+    videoPlayer.muted = true;
+    if (index === 0) videoPlayer.play();
+  });
+
   useEffect(() => {
     if (isActive) {
       player.play();
+      backgroundPlayer.play();
       setIsPlaying(true);
       return;
     }
 
     player.pause();
+    backgroundPlayer.pause();
     setIsPlaying(false);
-  }, [isActive, player]);
+  }, [backgroundPlayer, isActive, player]);
 
   const togglePlayback = useCallback(() => {
     if (player.playing) {
       player.pause();
+      backgroundPlayer.pause();
       setIsPlaying(false);
     } else {
       player.play();
+      backgroundPlayer.play();
       setIsPlaying(true);
     }
-  }, [player]);
+  }, [backgroundPlayer, player]);
 
   const toggleLike = useCallback(() => {
     setIsLiked((liked) => {
@@ -140,6 +150,14 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBotto
           onPress={togglePlayback}
           style={styles.videoFrame}
         >
+          <VideoView
+            player={backgroundPlayer}
+            style={styles.backgroundVideo}
+            contentFit="cover"
+            nativeControls={false}
+            allowsFullscreen={false}
+          />
+          <View pointerEvents="none" style={styles.backgroundShade} />
           <VideoView
             player={player}
             style={styles.video}
@@ -353,6 +371,16 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     backgroundColor: colors.surface,
+  },
+
+  backgroundVideo: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.5,
+  },
+
+  backgroundShade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.42)',
   },
 
   video: {
