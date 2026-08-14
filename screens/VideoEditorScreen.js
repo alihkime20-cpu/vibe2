@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import colors from '../constants/colors';
 import dimensions from '../constants/dimensions';
 
@@ -13,7 +14,7 @@ const formatTime = (seconds) => {
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
 };
 
-function Preview({ video, start, end, muted, onTime }) {
+function Preview({ video, start, end, muted, onTime, height }) {
   const player = useVideoPlayer(video.uri, (instance) => {
     instance.loop = false;
     instance.muted = muted;
@@ -49,7 +50,8 @@ function Preview({ video, start, end, muted, onTime }) {
   }, [end, player, start]);
 
   return (
-    <Pressable onPress={toggle} style={styles.preview}>
+    <Pressable onPress={toggle} style={[styles.preview, { height }]}>
+
       <VideoView player={player} style={styles.video} contentFit="contain" nativeControls={false} allowsFullscreen />
       <View pointerEvents="none" style={styles.previewShade} />
       {!playing && <View pointerEvents="none" style={styles.playButton}><Text style={styles.playIcon}>▶</Text></View>}
@@ -72,6 +74,9 @@ function Stepper({ title, value, min, max, onMinus, onPlus }) {
 }
 
 export default function VideoEditorScreen({ video, onBack }) {
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const previewHeight = Math.min(windowWidth * 1.15, Math.max(240, windowHeight * 0.38));
   const initialDuration = useMemo(() => {
     const milliseconds = Number(video?.duration || 0);
     return milliseconds > 0 ? Math.ceil(milliseconds / 1000) : DEFAULT_DURATION;
@@ -95,27 +100,28 @@ export default function VideoEditorScreen({ video, onBack }) {
 
   if (!video?.uri) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.emptyState}>
           <Text style={styles.logo}>VIBE</Text>
           <Text style={styles.emptyTitle}>لم يتم اختيار فيديو</Text>
           <Text style={styles.emptyText}>ارجع إلى شاشة الرفع واختر فيديو للبدء.</Text>
           <Pressable onPress={onBack} style={styles.primary}><Text style={styles.primaryText}>العودة إلى الرفع</Text></Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.header}>
+        <View style={[styles.header, { height: 65 + insets.top, paddingTop: insets.top }]}>
+
           <Pressable onPress={onBack} style={styles.headerAction}><Text style={styles.headerActionText}>رجوع</Text></Pressable>
           <Text style={styles.headerTitle}>تحرير الفيديو</Text>
           <View style={styles.headerSpacer} />
         </View>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          <Preview video={video} start={start} end={end} muted={muted} onTime={setCurrentTime} />
+          <Preview video={video} start={start} end={end} muted={muted} onTime={setCurrentTime} height={previewHeight} />
           <View style={styles.fileRow}>
             <View style={styles.fileIcon}><Text style={styles.fileIconText}>▶</Text></View>
             <View style={styles.fileInfo}><Text numberOfLines={1} style={styles.fileName}>{video.fileName || 'vibe-video.mp4'}</Text><Text style={styles.fileMeta}>{formatTime(currentTime)} من {formatTime(duration)}</Text></View>
@@ -142,7 +148,7 @@ export default function VideoEditorScreen({ video, onBack }) {
           <Text style={styles.footer}>لن يتم رفع الفيديو أو نشره قبل ربط الخادم.</Text>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -154,8 +160,8 @@ const styles = StyleSheet.create({
   headerAction: { minWidth: 52, paddingVertical: dimensions.padding.small },
   headerActionText: { color: colors.textSecondary, fontSize: dimensions.fontSize.small },
   headerSpacer: { minWidth: 52 },
-  content: { padding: dimensions.padding.medium, paddingBottom: dimensions.padding.large },
-  preview: { height: 300, borderRadius: dimensions.radius.large, overflow: 'hidden', backgroundColor: colors.surface },
+  content: { padding: dimensions.padding.medium, paddingBottom: dimensions.padding.large + 24 },
+  preview: { borderRadius: dimensions.radius.large, overflow: 'hidden', backgroundColor: colors.surface },
   video: { flex: 1 },
   previewShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.15)' },
   playButton: { position: 'absolute', top: '42%', left: '45%', width: 54, height: 54, borderRadius: dimensions.radius.round, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.55)' },

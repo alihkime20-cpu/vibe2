@@ -2,21 +2,21 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   BackHandler,
-  Dimensions,
   Pressable,
-  SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { VideoView, useVideoPlayer } from 'expo-video';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import colors from '../constants/colors';
 import dimensions from '../constants/dimensions';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 function formatBytes(bytes) {
   if (!bytes) return 'غير متاح';
@@ -32,7 +32,7 @@ function formatDuration(milliseconds) {
   return `${minutes}:${seconds}`;
 }
 
-function VideoPreview({ uri }) {
+function VideoPreview({ uri, height }) {
   const player = useVideoPlayer(uri, (videoPlayer) => {
     videoPlayer.loop = true;
     videoPlayer.muted = false;
@@ -44,7 +44,8 @@ function VideoPreview({ uri }) {
   }, [player]);
 
   return (
-    <Pressable onPress={togglePlayback} style={styles.previewPressable}>
+    <Pressable onPress={togglePlayback} style={[styles.previewPressable, { height }]}>
+
       <VideoView
         player={player}
         style={styles.previewVideo}
@@ -60,6 +61,9 @@ function VideoPreview({ uri }) {
 }
 
 export default function UploadScreen({ onNext }) {
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const previewHeight = Math.min(430, Math.max(220, windowHeight * 0.42));
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -162,8 +166,8 @@ export default function UploadScreen({ onNext }) {
 
   if (cameraOpen) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.cameraHeader}>
+      <View style={styles.container}>
+        <View style={[styles.cameraHeader, { height: 65 + insets.top, paddingTop: insets.top }]}>
           <Pressable onPress={closeCamera} style={styles.closeButton}>
             <Text style={styles.closeText}>إلغاء</Text>
           </Pressable>
@@ -180,13 +184,14 @@ export default function UploadScreen({ onNext }) {
             <View style={styles.recordButtonInner} />
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={[styles.header, { height: 65 + insets.top, paddingTop: insets.top }]}>
+
         <Text style={styles.logo}>VIBE</Text>
         <Text style={styles.headerTitle}>إنشاء فيديو</Text>
       </View>
@@ -209,8 +214,8 @@ export default function UploadScreen({ onNext }) {
           </Pressable>
         </View>
       ) : (
-        <View style={styles.selectedState}>
-          <VideoPreview uri={selectedVideo.uri} />
+        <ScrollView style={styles.selectedState} contentContainerStyle={styles.selectedContent} showsVerticalScrollIndicator={false}>
+          <VideoPreview uri={selectedVideo.uri} height={previewHeight} />
           <View style={styles.fileHeader}>
             <View style={styles.fileIcon}>
               <Text style={styles.fileIconText}>▶</Text>
@@ -240,9 +245,9 @@ export default function UploadScreen({ onNext }) {
           <Pressable onPress={() => onNext?.(selectedVideo)} style={styles.primaryButton}>
             <Text style={styles.primaryButtonText}>متابعة إلى التحرير</Text>
           </Pressable>
-        </View>
+        </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -349,10 +354,13 @@ const styles = StyleSheet.create({
   },
   selectedState: {
     flex: 1,
+  },
+  selectedContent: {
     padding: dimensions.padding.medium,
+    paddingBottom: dimensions.padding.large,
   },
   previewPressable: {
-    height: SCREEN_WIDTH * 1.15,
+    height: 300,
     maxHeight: 430,
     borderRadius: dimensions.radius.large,
     overflow: 'hidden',

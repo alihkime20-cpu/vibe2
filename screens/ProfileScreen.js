@@ -2,14 +2,15 @@ import React, { useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 
 import colors from '../constants/colors';
 import dimensions from '../constants/dimensions';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MOCK_VIDEOS = [
   { id: 'profile-1', color: '#243B53', views: '1.2K', symbol: '✦' },
@@ -54,6 +55,9 @@ function VideoTile({ item }) {
 }
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const gridGap = Math.max(3, Math.min(6, windowWidth * 0.01));
   const [activeTab, setActiveTab] = useState('videos');
   const videos = useMemo(
     () => (activeTab === 'videos' ? MOCK_VIDEOS : []),
@@ -61,18 +65,18 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <FlatList
         data={videos}
         numColumns={3}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <VideoTile item={item} />}
-        columnWrapperStyle={styles.gridRow}
-        contentContainerStyle={styles.content}
+        columnWrapperStyle={[styles.gridRow, { gap: gridGap }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 24 }]}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={(
           <View>
-            <View style={styles.topBar}>
+            <View style={[styles.topBar, { minHeight: 58 + insets.top, paddingTop: insets.top }]}>
               <Text style={styles.screenTitle}>الملف الشخصي</Text>
               <Pressable
                 accessibilityRole="button"
@@ -147,7 +151,7 @@ export default function ProfileScreen() {
           </View>
         )}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -157,7 +161,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingBottom: 28,
+    paddingBottom: 24,
   },
   topBar: {
     minHeight: 58,
@@ -313,6 +317,7 @@ const styles = StyleSheet.create({
   },
   videoTile: {
     flex: 1,
+    minWidth: 0,
     aspectRatio: 0.72,
     marginBottom: 4,
     borderRadius: 6,

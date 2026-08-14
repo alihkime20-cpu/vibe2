@@ -1,27 +1,22 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  Dimensions,
   FlatList,
-  Platform,
   Pressable,
-  SafeAreaView,
   Share,
-  StatusBar,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import colors from '../constants/colors';
 import dimensions from '../constants/dimensions';
 
 const HEADER_HEIGHT = 56;
 const BOTTOM_NAV_HEIGHT = 75;
-const BOTTOM_SAFE_GUTTER = 8;
-const { width: INITIAL_WIDTH } = Dimensions.get('window');
 
 // بيانات محلية مؤقتة تحافظ على نفس العقد المتوقع لاحقًا من services/videos.js.
 const MOCK_VIDEOS = [
@@ -203,13 +198,11 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth }) {
 
 export default function HomeScreen({ onOpenSearch }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const topInset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0;
-  const headerHeight = HEADER_HEIGHT + topInset;
-  const feedHeight = Math.max(
-    windowHeight - headerHeight - BOTTOM_NAV_HEIGHT - BOTTOM_SAFE_GUTTER,
-    1
-  );
+  const headerHeight = HEADER_HEIGHT + insets.top;
+  const bottomBarHeight = BOTTOM_NAV_HEIGHT + insets.bottom;
+  const feedHeight = Math.max(windowHeight - headerHeight - bottomBarHeight, 1);
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 70 }).current;
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     const firstVisible = viewableItems.find((viewableItem) => viewableItem.isViewable);
@@ -223,15 +216,16 @@ export default function HomeScreen({ onOpenSearch }) {
         index={index}
         isActive={index === activeIndex}
         itemHeight={feedHeight}
-        itemWidth={windowWidth || INITIAL_WIDTH}
+        itemWidth={windowWidth}
       />
     ),
     [activeIndex, feedHeight, windowWidth]
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={[styles.header, { height: headerHeight, paddingTop: topInset }]}>
+    <View style={styles.container}>
+      <View style={[styles.header, { height: headerHeight, paddingTop: insets.top }]}>
+
         <Text style={styles.logo}>VIBE</Text>
         <View style={styles.headerTabs}>
           <Text style={styles.activeTab}>لك</Text>
@@ -268,7 +262,7 @@ export default function HomeScreen({ onOpenSearch }) {
         windowSize={3}
         removeClippedSubviews
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -370,7 +364,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: dimensions.padding.medium,
     left: dimensions.padding.medium,
-    bottom: 28,
+    bottom: 18,
     paddingRight: 58,
   },
 
@@ -448,7 +442,7 @@ const styles = StyleSheet.create({
   actionsRail: {
     position: 'absolute',
     right: dimensions.padding.medium,
-    bottom: 22,
+    bottom: 16,
     alignItems: 'center',
     gap: dimensions.padding.medium,
   },

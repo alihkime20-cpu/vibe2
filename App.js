@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeScreen from './screens/HomeScreen';
 import UploadScreen from './screens/UploadScreen';
 import VideoEditorScreen from './screens/VideoEditorScreen';
@@ -13,6 +14,15 @@ import {
 } from 'react-native';
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent() {
+  const insets = useSafeAreaInsets();
   const [screen, setScreen] = useState('home');
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
@@ -79,7 +89,7 @@ export default function App() {
       </View>
 
       {/* شريط التنقل */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 6 }]}>
 
         <NavButton
           icon="⌂"
@@ -114,6 +124,7 @@ export default function App() {
       </View>
 
       <CreateMenu
+        bottomInset={insets.bottom}
         visible={createMenuOpen}
         onClose={() => setCreateMenuOpen(false)}
         onCreateVideo={() => {
@@ -129,12 +140,12 @@ export default function App() {
   );
 }
 
-function CreateMenu({ visible, onClose, onCreateVideo, onStartLive }) {
+function CreateMenu({ visible, bottomInset, onClose, onCreateVideo, onStartLive }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalRoot}>
         <Pressable style={styles.modalBackdrop} onPress={onClose} />
-        <View style={styles.createSheet}>
+        <View style={[styles.createSheet, { paddingBottom: bottomInset + 24 }]}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>إنشاء محتوى</Text>
           <Text style={styles.sheetSubtitle}>اختر الطريقة التي تريد أن تبدأ بها</Text>
@@ -333,8 +344,8 @@ const styles = StyleSheet.create({
   },
 
   bottomBar: {
-    height: 75,
-    paddingBottom: 4,
+    minHeight: 75,
+    paddingTop: 6,
     backgroundColor: '#050505',
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -391,7 +402,6 @@ const styles = StyleSheet.create({
   createSheet: {
     paddingTop: 10,
     paddingHorizontal: 18,
-    paddingBottom: 24,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     backgroundColor: '#111',
