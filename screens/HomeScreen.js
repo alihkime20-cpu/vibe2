@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
-  Image,
   Pressable,
   Share,
   StyleSheet,
@@ -19,29 +18,21 @@ import dimensions from '../constants/dimensions';
 const HEADER_HEIGHT = 56;
 const BOTTOM_NAV_HEIGHT = 75;
 
-// مصدر مؤقت لمنشور الصورة المرفق إلى أن يتم ربط الـFeed بالـBackend.
+// فيديو محلي مؤقت إلى أن يتم ربط الـFeed بالـBackend.
 const FEED_ITEMS = [
   {
-    id: 'vibe-image-1',
-    type: 'image',
-    image: require('../assets/feed/vibe-post.png'),
+    id: 'vibe-video-1',
+    type: 'video',
+    videoUrl: require('../assets/feed/vibe-video.mp4'),
+    username: '@vibe_creator',
+    displayName: 'VIBE Creator',
+    description: 'منشور فيديو جديد في مجتمع VIBE #VIBE',
+    likes: 0,
+    comments: 0,
+    shares: 0,
+    isFollowing: false,
   },
 ];
-
-function FeedImageItem({ item, itemHeight, itemWidth }) {
-  return (
-    <View style={[styles.videoItem, { height: itemHeight, width: itemWidth }]}>
-      <View style={styles.videoCanvas}>
-        <Image
-          source={item.image}
-          style={styles.feedImage}
-          resizeMode="contain"
-          accessibilityLabel="منشور صورة في VIBE"
-        />
-      </View>
-    </View>
-  );
-}
 
 function formatCount(value) {
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -225,13 +216,7 @@ export default function HomeScreen({ onOpenSearch }) {
   }).current;
 
   const renderItem = useCallback(
-      ({ item, index }) => item.type === 'image' ? (
-        <FeedImageItem
-          item={item}
-          itemHeight={feedHeight}
-          itemWidth={windowWidth}
-        />
-      ) : (
+      ({ item, index }) => (
         <FeedVideoItem
           item={item}
           index={index}
@@ -390,11 +375,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: dimensions.fontSize.medium,
     textAlign: 'center',
-  },
-
-  feedImage: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.background,
   },
 
   videoItem: {
