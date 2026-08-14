@@ -143,7 +143,7 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBotto
           <VideoView
             player={player}
             style={styles.video}
-            contentFit="cover"
+            contentFit="contain"
             nativeControls={false}
             allowsFullscreen={false}
           />
@@ -357,7 +357,6 @@ const styles = StyleSheet.create({
 
   video: {
     ...StyleSheet.absoluteFillObject,
-    transform: [{ scale: 1.35 }],
   },
 
   videoShade: {
