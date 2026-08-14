@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeScreen from './screens/HomeScreen';
 import UploadScreen from './screens/UploadScreen';
