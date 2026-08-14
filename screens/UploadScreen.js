@@ -66,6 +66,7 @@ export default function UploadScreen({ onNext }) {
   const previewHeight = Math.min(430, Math.max(220, windowHeight * 0.42));
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
@@ -95,6 +96,17 @@ export default function UploadScreen({ onNext }) {
   }, [cameraOpen, closeCamera]);
 
   useEffect(() => {
+    if (!libraryOpen) return undefined;
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      setLibraryOpen(false);
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [libraryOpen]);
+
+  useEffect(() => {
     return () => {
       isClosingCameraRef.current = true;
       cameraRef.current?.stopRecording();
@@ -102,21 +114,27 @@ export default function UploadScreen({ onNext }) {
   }, []);
 
   const chooseFromLibrary = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('الصلاحية مطلوبة', 'اسمح للتطبيق بالوصول إلى معرض الصور لاختيار فيديو.');
-      return;
-    }
+    setLibraryOpen(true);
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['videos'],
-      allowsEditing: false,
-      quality: 1,
-    });
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('الصلاحية مطلوبة', 'اسمح للتطبيق بالوصول إلى معرض الصور لاختيار فيديو.');
+        return;
+      }
 
-    if (!result.canceled && result.assets?.[0]) {
-      setSelectedVideo(result.assets[0]);
-      setCameraOpen(false);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['videos'],
+        allowsEditing: false,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        setSelectedVideo(result.assets[0]);
+        setCameraOpen(false);
+      }
+    } finally {
+      setLibraryOpen(false);
     }
   }, []);
 

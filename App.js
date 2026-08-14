@@ -11,6 +11,7 @@ import {
   Text,
   View,
   TouchableOpacity,
+  BackHandler,
 } from 'react-native';
 
 export default function App() {
@@ -26,6 +27,17 @@ function AppContent() {
   const [screen, setScreen] = useState('home');
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (screen !== 'live') return undefined;
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      setScreen('home');
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [screen]);
 
   const renderScreen = () => {
     if (screen === 'home') {
