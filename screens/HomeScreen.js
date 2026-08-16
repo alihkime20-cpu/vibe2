@@ -23,7 +23,7 @@ const FEED_ITEMS = [
   {
     id: 'vibe-video-1',
     type: 'video',
-    videoUrl: require('../assets/feed/vibe-video.mp4'),
+    videoUrl: 'https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4',
     username: '@vibe_creator',
     displayName: 'VIBE Creator',
     description: 'منشور فيديو جديد في مجتمع VIBE #VIBE',
