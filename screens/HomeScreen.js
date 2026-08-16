@@ -15,10 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import colors from '../constants/colors';
 import dimensions from '../constants/dimensions';
 
-const HEADER_HEIGHT = 56;
-const BOTTOM_NAV_HEIGHT = 75;
+const HEADER_CONTENT_HEIGHT = 56;
 
-// فيديو محلي مؤقت إلى أن يتم ربط الـFeed بالـBackend.
 const FEED_ITEMS = [
   {
     id: 'vibe-video-1',
@@ -46,6 +44,7 @@ function ActionButton({ icon, label, onPress, active = false }) {
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
+      hitSlop={8}
       style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
     >
       <Text style={[styles.actionIcon, active && styles.activeActionIcon]}>{icon}</Text>
@@ -57,8 +56,8 @@ function ActionButton({ icon, label, onPress, active = false }) {
 function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBottom }) {
   const [isLiked, setIsLiked] = useState(false);
   const [likes, setLikes] = useState(item.likes);
-  const [isFollowing, setIsFollowing] = useState(item.isFollowing);
   const [comments, setComments] = useState(item.comments);
+  const [isFollowing, setIsFollowing] = useState(item.isFollowing);
   const [isPlaying, setIsPlaying] = useState(index === 0);
 
   const player = useVideoPlayer(item.videoUrl, (videoPlayer) => {
@@ -91,11 +90,12 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBotto
       player.pause();
       backgroundPlayer.pause();
       setIsPlaying(false);
-    } else {
-      player.play();
-      backgroundPlayer.play();
-      setIsPlaying(true);
+      return;
     }
+
+    player.play();
+    backgroundPlayer.play();
+    setIsPlaying(true);
   }, [backgroundPlayer, player]);
 
   const toggleLike = useCallback(() => {
@@ -112,31 +112,30 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBotto
 
   const handleShare = useCallback(async () => {
     try {
-      await Share.share({
-        message: `شاهد هذا الفيديو على VIBE من ${item.username}`,
-      });
+      await Share.share({ message: `شاهد هذا الفيديو على VIBE من ${item.username}` });
     } catch (error) {
       Alert.alert('المشاركة', 'تعذر فتح خيارات المشاركة حاليًا.');
     }
   }, [item.username]);
 
-    return (
+  return (
     <View style={[styles.videoItem, { height: itemHeight, width: itemWidth }]}>
-      <View style={styles.videoCanvas}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={isPlaying ? 'إيقاف الفيديو' : 'تشغيل الفيديو'}
-          onPress={togglePlayback}
-          style={styles.videoFrame}
-        >
-          <VideoView
-            player={backgroundPlayer}
-            style={styles.backgroundVideo}
-            contentFit="cover"
-            nativeControls={false}
-            allowsFullscreen={false}
-          />
-          <View pointerEvents="none" style={styles.backgroundShade} />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={isPlaying ? 'إيقاف الفيديو' : 'تشغيل الفيديو'}
+        onPress={togglePlayback}
+        style={styles.videoFrame}
+      >
+        <VideoView
+          player={backgroundPlayer}
+          style={styles.backgroundVideo}
+          contentFit="cover"
+          nativeControls={false}
+          allowsFullscreen={false}
+        />
+        <View pointerEvents="none" style={styles.backgroundShade} />
+
+        <View style={styles.originalVideoStage} pointerEvents="none">
           <VideoView
             player={player}
             style={styles.video}
@@ -144,71 +143,78 @@ function FeedVideoItem({ item, index, isActive, itemHeight, itemWidth, safeBotto
             nativeControls={false}
             allowsFullscreen={false}
           />
-          <View pointerEvents="none" style={styles.videoShade} />
-          {!isPlaying && (
-            <View pointerEvents="none" style={styles.playOverlay}>
-              <Text style={styles.playOverlayIcon}>▶</Text>
-            </View>
-          )}
-          <View pointerEvents="none" style={styles.progressHint}>
-            <View style={styles.progressFill} />
-          </View>
+        </View>
 
-          <View pointerEvents="box-none" style={styles.videoOverlay}>
-            <View style={[styles.overlayBottom, { paddingBottom: safeBottom }]}>
-              <View style={styles.videoMeta}>
-                <View style={styles.authorRow}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{item.displayName.charAt(0)}</Text>
-                  </View>
-                  <View style={styles.authorDetails}>
-                    <Text numberOfLines={1} style={styles.displayName}>{item.displayName}</Text>
-                    <Text numberOfLines={1} style={styles.username}>{item.username}</Text>
-                  </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={isFollowing ? 'إلغاء المتابعة' : 'متابعة المستخدم'}
-                    onPress={() => setIsFollowing((following) => !following)}
-                    style={[styles.followButton, isFollowing && styles.followingButton]}
-                  >
-                    <Text style={[styles.followText, isFollowing && styles.followingText]}>
-                      {isFollowing ? 'يتابع' : 'متابعة'}
-                    </Text>
-                  </Pressable>
+        <View pointerEvents="none" style={styles.topGradient} />
+        <View pointerEvents="none" style={styles.bottomGradient} />
+
+        {!isPlaying && (
+          <View pointerEvents="none" style={styles.playOverlay}>
+            <Text style={styles.playOverlayIcon}>▶</Text>
+          </View>
+        )}
+
+        <View pointerEvents="none" style={styles.progressHint}>
+          <View style={styles.progressFill} />
+        </View>
+
+        <View pointerEvents="box-none" style={styles.videoOverlay}>
+          <View style={[styles.overlayBottom, { paddingBottom: safeBottom }]}>
+            <View style={styles.videoMeta}>
+              <View style={styles.authorRow}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{item.displayName.charAt(0)}</Text>
                 </View>
-                <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
+                <View style={styles.authorDetails}>
+                  <Text numberOfLines={1} style={styles.displayName}>{item.displayName}</Text>
+                  <Text numberOfLines={1} style={styles.username}>{item.username}</Text>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={isFollowing ? 'إلغاء المتابعة' : 'متابعة المستخدم'}
+                  onPress={() => setIsFollowing((following) => !following)}
+                  style={[styles.followButton, isFollowing && styles.followingButton]}
+                >
+                  <Text style={[styles.followText, isFollowing && styles.followingText]}>
+                    {isFollowing ? 'يتابع' : 'متابعة'}
+                  </Text>
+                </Pressable>
               </View>
+              <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
+              <Text numberOfLines={1} style={styles.musicLine}>♪ الصوت الأصلي · VIBE</Text>
+            </View>
 
-              <View style={styles.actionsRail}>
-                <ActionButton
-                  icon={isLiked ? '♥' : '♡'}
-                  label={formatCount(likes)}
-                  onPress={toggleLike}
-                  active={isLiked}
-                />
-                <ActionButton icon="◯" label={formatCount(comments)} onPress={handleComment} />
-                <ActionButton icon="↗" label={formatCount(item.shares)} onPress={handleShare} />
-                <ActionButton icon="⋯" label="المزيد" onPress={() => Alert.alert('VIBE', 'المزيد من الخيارات ستتوفر لاحقًا.')} />
+            <View style={styles.actionsRail}>
+              <ActionButton
+                icon={isLiked ? '♥' : '♡'}
+                label={formatCount(likes)}
+                onPress={toggleLike}
+                active={isLiked}
+              />
+              <ActionButton icon="◯" label={formatCount(comments)} onPress={handleComment} />
+              <ActionButton icon="↗" label={formatCount(item.shares)} onPress={handleShare} />
+              <ActionButton
+                icon="⋯"
+                label="المزيد"
+                onPress={() => Alert.alert('VIBE', 'المزيد من الخيارات ستتوفر لاحقًا.')}
+              />
+              <View style={styles.soundDisc}>
+                <Text style={styles.soundDiscText}>♪</Text>
               </View>
             </View>
           </View>
-        </Pressable>
-      </View>
+        </View>
+      </Pressable>
     </View>
   );
 }
 
-export default function HomeScreen({ onOpenSearch }) {
+export default function HomeScreen({ onOpenSearch, onOpenLive }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
+  const [feedHeight, setFeedHeight] = useState(0);
   const insets = useSafeAreaInsets();
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const headerHeight = HEADER_HEIGHT + insets.top;
-  const bottomBarHeight = BOTTOM_NAV_HEIGHT + insets.bottom;
-  const fallbackFeedHeight = Math.max(windowHeight - headerHeight - bottomBarHeight, 1);
-  const feedHeight = contentHeight > 0
-    ? Math.max(contentHeight - headerHeight, 1)
-    : fallbackFeedHeight;
+  const { width: windowWidth } = useWindowDimensions();
+  const headerHeight = HEADER_CONTENT_HEIGHT + insets.top;
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 70 }).current;
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     const firstVisible = viewableItems.find((viewableItem) => viewableItem.isViewable);
@@ -216,39 +222,43 @@ export default function HomeScreen({ onOpenSearch }) {
   }).current;
 
   const renderItem = useCallback(
-      ({ item, index }) => (
-        <FeedVideoItem
-          item={item}
-          index={index}
-          isActive={index === activeIndex}
-          itemHeight={feedHeight}
-          itemWidth={windowWidth}
-          safeBottom={Math.max(dimensions.padding.small, insets.bottom)}
-        />
-      ),
-    [activeIndex, feedHeight, insets.bottom, windowWidth]
+    ({ item, index }) => (
+      <FeedVideoItem
+        item={item}
+        index={index}
+        isActive={index === activeIndex}
+        itemHeight={Math.max(feedHeight, 1)}
+        itemWidth={windowWidth}
+        safeBottom={Math.max(insets.bottom, dimensions.padding.small)}
+      />
+    ),
+    [activeIndex, feedHeight, insets.bottom, windowWidth],
   );
 
   return (
-    <View
-      style={styles.container}
-      onLayout={({ nativeEvent: { layout } }) => {
-        if (layout.height > 0 && layout.height !== contentHeight) {
-          setContentHeight(layout.height);
-        }
-      }}
-    >
+    <View style={styles.container}>
       <View style={[styles.header, { height: headerHeight, paddingTop: insets.top }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="فتح البث المباشر"
+          onPress={onOpenLive}
+          hitSlop={8}
+          style={({ pressed }) => [styles.headerSide, pressed && styles.pressed]}
+        >
+          <Text style={styles.liveDot}>●</Text>
+          <Text style={styles.liveText}>LIVE</Text>
+        </Pressable>
 
-        <Text style={styles.logo}>VIBE</Text>
         <View style={styles.headerTabs}>
           <Text style={styles.activeTab}>لك</Text>
-          <Text style={styles.tab}>يتابع</Text>
+          <Text style={styles.tab}>أتابع</Text>
         </View>
+
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="فتح البحث"
           onPress={onOpenSearch}
+          hitSlop={8}
           style={({ pressed }) => [styles.searchButton, pressed && styles.pressed]}
         >
           <Text style={styles.searchIcon}>⌕</Text>
@@ -260,6 +270,9 @@ export default function HomeScreen({ onOpenSearch }) {
         data={FEED_ITEMS}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        onLayout={({ nativeEvent: { layout } }) => {
+          if (layout.height > 0 && layout.height !== feedHeight) setFeedHeight(layout.height);
+        }}
         ListEmptyComponent={(
           <View style={styles.emptyFeed}>
             <Text style={styles.emptyFeedTitle}>لا توجد فيديوهات حاليًا</Text>
@@ -268,15 +281,15 @@ export default function HomeScreen({ onOpenSearch }) {
         )}
         contentContainerStyle={FEED_ITEMS.length === 0 ? styles.emptyFeedContent : undefined}
         pagingEnabled
-        snapToInterval={feedHeight}
+        snapToInterval={Math.max(feedHeight, 1)}
         snapToAlignment="start"
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         getItemLayout={(_, index) => ({
-          length: feedHeight,
-          offset: feedHeight * index,
+          length: Math.max(feedHeight, 1),
+          offset: Math.max(feedHeight, 1) * index,
           index,
         })}
         initialNumToRender={1}
@@ -294,67 +307,70 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-
   header: {
-    height: HEADER_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: dimensions.padding.medium,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    backgroundColor: colors.background,
     zIndex: 2,
   },
-
+  headerSide: {
+    minWidth: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  liveDot: {
+    color: colors.danger,
+    fontSize: 11,
+  },
+  liveText: {
+    color: colors.text,
+    fontSize: dimensions.fontSize.small,
+    fontWeight: '800',
+  },
+  headerTabs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 22,
+  },
+  activeTab: {
+    color: colors.text,
+    fontSize: dimensions.fontSize.medium,
+    fontWeight: '800',
+    paddingBottom: 5,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.text,
+  },
+  tab: {
+    color: colors.textMuted,
+    fontSize: dimensions.fontSize.medium,
+    paddingBottom: 5,
+  },
   searchButton: {
     width: 38,
     height: 38,
     borderRadius: dimensions.radius.round,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(0,0,0,0.35)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
-
   searchIcon: {
     color: colors.text,
     fontSize: 27,
     lineHeight: 30,
   },
-
-  logo: {
-    color: colors.text,
-    fontSize: dimensions.fontSize.large,
-    fontWeight: '900',
-    letterSpacing: 4,
-  },
-
-  headerTabs: {
-    flexDirection: 'row',
-    gap: 20,
-  },
-
-  activeTab: {
-    color: colors.text,
-    fontSize: dimensions.fontSize.medium,
-    fontWeight: 'bold',
-  },
-
-  tab: {
-    color: colors.textMuted,
-    fontSize: dimensions.fontSize.medium,
-  },
-
   feed: {
     flex: 1,
   },
-
   emptyFeedContent: {
     flexGrow: 1,
   },
-
   emptyFeed: {
     flex: 1,
     alignItems: 'center',
@@ -362,32 +378,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: dimensions.padding.large,
     backgroundColor: colors.background,
   },
-
   emptyFeedTitle: {
     color: colors.text,
     fontSize: dimensions.fontSize.large,
     fontWeight: '700',
     textAlign: 'center',
   },
-
   emptyFeedText: {
     marginTop: dimensions.padding.small,
     color: colors.textMuted,
     fontSize: dimensions.fontSize.medium,
     textAlign: 'center',
   },
-
   videoItem: {
     backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-
-  videoCanvas: {
-    flex: 1,
-    width: '100%',
-  },
-
   videoFrame: {
     flex: 1,
     width: '100%',
@@ -396,26 +401,30 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: colors.surface,
   },
-
   backgroundVideo: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.5,
+    opacity: 0.52,
   },
-
   backgroundShade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.42)',
+    backgroundColor: 'rgba(0,0,0,0.48)',
   },
-
+  originalVideoStage: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   video: {
     ...StyleSheet.absoluteFillObject,
   },
-
-  videoShade: {
+  topGradient: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.18)',
+    backgroundColor: 'rgba(0,0,0,0.12)',
   },
-
+  bottomGradient: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+  },
   playOverlay: {
     position: 'absolute',
     top: '46%',
@@ -425,74 +434,74 @@ const styles = StyleSheet.create({
     borderRadius: dimensions.radius.round,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
-
   playOverlayIcon: {
     color: colors.text,
     fontSize: dimensions.fontSize.title,
     marginLeft: 3,
   },
-
+  progressHint: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    left: 0,
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  progressFill: {
+    width: '35%',
+    height: 2,
+    backgroundColor: colors.text,
+  },
   videoOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'flex-end',
   },
-
   overlayBottom: {
-    position: 'absolute',
-    right: dimensions.padding.medium,
-    bottom: 0,
-    left: dimensions.padding.medium,
+    paddingHorizontal: dimensions.padding.medium,
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
-
   videoMeta: {
     flex: 1,
     minWidth: 0,
     marginRight: dimensions.padding.small,
   },
-
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-
   avatar: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: dimensions.radius.round,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surfaceLight,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: colors.text,
   },
-
   avatarText: {
     color: colors.text,
     fontSize: dimensions.fontSize.large,
     fontWeight: '900',
   },
-
   authorDetails: {
     flex: 1,
+    minWidth: 0,
     marginHorizontal: dimensions.padding.small,
   },
-
   displayName: {
     color: colors.text,
     fontSize: dimensions.fontSize.medium,
     fontWeight: 'bold',
   },
-
   username: {
     color: colors.textSecondary,
     fontSize: dimensions.fontSize.small,
     marginTop: 2,
   },
-
   followButton: {
     minWidth: 72,
     paddingHorizontal: dimensions.padding.small,
@@ -502,75 +511,70 @@ const styles = StyleSheet.create({
     borderColor: colors.text,
     alignItems: 'center',
   },
-
   followingButton: {
     borderColor: colors.border,
     backgroundColor: colors.surfaceLight,
   },
-
   followText: {
     color: colors.text,
     fontSize: dimensions.fontSize.small,
     fontWeight: 'bold',
   },
-
   followingText: {
     color: colors.textSecondary,
   },
-
   description: {
     color: colors.text,
     fontSize: dimensions.fontSize.medium,
     lineHeight: 21,
     marginTop: dimensions.padding.small,
   },
-
+  musicLine: {
+    color: '#ddd',
+    fontSize: dimensions.fontSize.small,
+    marginTop: dimensions.padding.small,
+  },
   actionsRail: {
-    width: 52,
+    width: 54,
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: dimensions.padding.medium,
   },
-
   actionButton: {
-    minWidth: 42,
+    minWidth: 44,
     alignItems: 'center',
   },
-
   pressed: {
     opacity: 0.6,
   },
-
   actionIcon: {
     color: colors.text,
     fontSize: 30,
     lineHeight: 32,
     textAlign: 'center',
   },
-
   activeActionIcon: {
     color: colors.danger,
   },
-
   actionLabel: {
     color: colors.text,
     fontSize: dimensions.fontSize.small,
     fontWeight: 'bold',
     marginTop: 2,
   },
-
-  progressHint: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    left: 0,
-    height: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  soundDisc: {
+    width: 40,
+    height: 40,
+    borderRadius: dimensions.radius.round,
+    borderWidth: 2,
+    borderColor: colors.text,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
-  progressFill: {
-    width: '35%',
-    height: 2,
-    backgroundColor: colors.text,
+  soundDiscText: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: 'bold',
   },
 });

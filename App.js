@@ -4,6 +4,7 @@ import HomeScreen from './screens/HomeScreen';
 import UploadScreen from './screens/UploadScreen';
 import VideoEditorScreen from './screens/VideoEditorScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import BottomTabBar from './components/BottomTabBar';
 import {
   Modal,
   Pressable,
@@ -41,7 +42,12 @@ function AppContent() {
 
   const renderScreen = () => {
     if (screen === 'home') {
-      return <HomeScreen onOpenSearch={() => setScreen('search')} />;
+      return (
+        <HomeScreen
+          onOpenSearch={() => setScreen('search')}
+          onOpenLive={() => setScreen('live')}
+        />
+      );
     }
 
     if (screen === 'search') {
@@ -100,40 +106,17 @@ function AppContent() {
         {renderScreen()}
       </View>
 
-      {/* شريط التنقل */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 6 }]}>
-
-        <NavButton
-          icon="⌂"
-          text="الرئيسية"
-          active={screen === 'home'}
-          onPress={() => setScreen('home')}
-        />
-
-        <TouchableOpacity
-          style={styles.plusButton}
-          accessibilityRole="button"
-          accessibilityLabel="إنشاء محتوى"
-          onPress={() => setCreateMenuOpen(true)}
-        >
-          <Text style={styles.plus}>+</Text>
-        </TouchableOpacity>
-
-        <NavButton
-          icon="♡"
-          text="الإشعارات"
-          active={screen === 'notifications'}
-          onPress={() => setScreen('notifications')}
-        />
-
-        <NavButton
-          icon="♙"
-          text="حسابي"
-          active={screen === 'profile'}
-          onPress={() => setScreen('profile')}
-        />
-
-      </View>
+      <BottomTabBar
+        activeTab={screen === 'home' || screen === 'search' ? 'home' : screen}
+        bottomInset={insets.bottom}
+        onTabPress={(tab) => {
+          if (tab === 'create') {
+            setCreateMenuOpen(true);
+            return;
+          }
+          setScreen(tab);
+        }}
+      />
 
       <CreateMenu
         bottomInset={insets.bottom}
@@ -197,20 +180,6 @@ function LivePlaceholder({ onBack }) {
         <Text style={styles.liveBackText}>العودة للرئيسية</Text>
       </TouchableOpacity>
     </View>
-  );
-}
-
-function NavButton({ icon, text, active, onPress }) {
-  return (
-    <TouchableOpacity style={styles.navButton} onPress={onPress}>
-      <Text style={[styles.navIcon, active && styles.active]}>
-        {icon}
-      </Text>
-
-      <Text style={[styles.navText, active && styles.active]}>
-        {text}
-      </Text>
-    </TouchableOpacity>
   );
 }
 

@@ -1,51 +1,37 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import colors from '../constants/colors';
 import dimensions from '../constants/dimensions';
 
-export default function BottomTabBar({ activeTab, onTabPress }) {
-  const tabs = [
-    { id: 'home', icon: '⌂', label: 'الرئيسية' },
-    { id: 'search', icon: '⌕', label: 'البحث' },
-    { id: 'upload', icon: '+', label: 'نشر' },
-    { id: 'notifications', icon: '♡', label: 'الإشعارات' },
-    { id: 'profile', icon: '♙', label: 'حسابي' },
-  ];
+const TABS = [
+  { id: 'home', icon: '⌂', label: 'الرئيسية' },
+  { id: 'create', icon: '+', label: 'إنشاء' },
+  { id: 'notifications', icon: '♡', label: 'الإشعارات' },
+  { id: 'profile', icon: '♙', label: 'حسابي' },
+];
 
+export default function BottomTabBar({ activeTab, onTabPress, bottomInset = 0 }) {
   return (
-    <View style={styles.container}>
-      {tabs.map((tab) => {
+    <View style={[styles.container, { paddingBottom: bottomInset + 6 }]}>
+      {TABS.map((tab) => {
+        const isCreate = tab.id === 'create';
         const active = activeTab === tab.id;
 
         return (
-          <TouchableOpacity
+          <Pressable
             key={tab.id}
-            style={styles.tab}
+            accessibilityRole="button"
+            accessibilityLabel={tab.label}
             onPress={() => onTabPress(tab.id)}
-            activeOpacity={0.7}
+            style={({ pressed }) => [styles.tab, pressed && styles.pressed]}
           >
-            <View
-              style={[
-                styles.iconContainer,
-                tab.id === 'upload' && styles.uploadButton,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.icon,
-                  active && styles.activeIcon,
-                  tab.id === 'upload' && styles.plus,
-                ]}
-              >
+            <View style={[styles.iconContainer, isCreate && styles.createButton]}>
+              <Text style={[styles.icon, active && styles.activeIcon, isCreate && styles.createIcon]}>
                 {tab.icon}
               </Text>
             </View>
-
-            <Text style={[styles.label, active && styles.activeLabel]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
+            <Text style={[styles.label, active && styles.activeLabel]}>{tab.label}</Text>
+          </Pressable>
         );
       })}
     </View>
@@ -54,58 +40,59 @@ export default function BottomTabBar({ activeTab, onTabPress }) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 78,
-    backgroundColor: colors.background,
+    minHeight: 78,
+    backgroundColor: '#050505',
     borderTopWidth: 1,
     borderTopColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
+    paddingTop: 7,
     paddingHorizontal: dimensions.padding.small,
   },
-
   tab: {
     flex: 1,
+    minHeight: 58,
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   iconContainer: {
+    height: 36,
+    minWidth: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 34,
   },
-
   icon: {
     color: colors.textMuted,
     fontSize: dimensions.iconSize.large,
+    lineHeight: 30,
   },
-
   activeIcon: {
     color: colors.text,
   },
-
   label: {
     color: colors.textMuted,
     fontSize: 10,
     marginTop: 3,
   },
-
   activeLabel: {
     color: colors.text,
+    fontWeight: '700',
   },
-
-  uploadButton: {
-    width: 42,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.primary,
+  createButton: {
+    width: 48,
+    height: 38,
+    minWidth: 48,
+    borderRadius: 11,
+    backgroundColor: colors.text,
   },
-
-  plus: {
+  createIcon: {
     color: colors.background,
-    fontSize: 27,
-    fontWeight: 'bold',
-    lineHeight: 30,
+    fontSize: 30,
+    fontWeight: '900',
+    lineHeight: 33,
+  },
+  pressed: {
+    opacity: 0.68,
   },
 });
