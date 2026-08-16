@@ -1,37 +1,9 @@
 {
   "expo": {
-    "name": "VIBE",
-    "slug": "vibe",
+    "name": "VIBE Snack Preview",
+    "slug": "vibe-snack-preview",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "splash": {
-      "image": "./assets/vibe-logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
-    "icon": "./assets/vibe-icon.png",
-    "ios": {
-      "bundleIdentifier": "com.alifadil.vibe"
-    },
-    "android": {
-      "package": "com.vibe.social",
-      "icon": "./assets/vibe-icon.png",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/vibe-icon.png",
-        "backgroundColor": "#000000"
-      }
-    },
-    "extra": {
-      "eas": {
-        "projectId": "31636449-8062-42c4-8861-d892fed8a1ea"
-      }
-    },
-    "plugins": [
-      "expo-font"
-    ]
+    "userInterfaceStyle": "dark"
   }
 }
