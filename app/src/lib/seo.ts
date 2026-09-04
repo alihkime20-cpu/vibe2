@@ -1,6 +1,7 @@
 export const SITE_NAME = "World Encyclopedia";
 export const SITE_ORIGIN = (
-  import.meta.env.VITE_SITE_ORIGIN || "https://world-encyclopedia.example"
+  import.meta.env.VITE_SITE_ORIGIN ||
+  (typeof window !== "undefined" ? window.location.origin : "")
 ).replace(/\/$/, "");
 
 export function absoluteUrl(path: string) {

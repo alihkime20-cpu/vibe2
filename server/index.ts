@@ -1,3 +1,7 @@
+import { timingSafeEqual } from "node:crypto";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import cors from "cors";
 import express, {
   type NextFunction,
@@ -16,6 +20,10 @@ const app = express();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);
+    callback(null, allowed.has(file.mimetype));
+  },
 });
 
 type TranslationInsert =
@@ -24,7 +32,29 @@ type SourceInsert = Database["public"]["Tables"]["sources"]["Insert"];
 type ArticleTranslation =
   Database["public"]["Tables"]["article_translations"]["Row"];
 
-app.use(cors({ origin: true, credentials: false }));
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+if (configuredOrigins.length) {
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || configuredOrigins.includes(origin))
+          return callback(null, true);
+        return callback(new Error("Origin is not allowed by CORS."));
+      },
+      credentials: false,
+      methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: [
+        "content-type",
+        "authorization",
+        "x-editorial-token",
+        "x-editor",
+      ],
+    }),
+  );
+}
 app.use(express.json({ limit: "2mb" }));
 
 function sendError(
@@ -36,6 +66,15 @@ function sendError(
   return res
     .status(status)
     .json({ error: message, ...(details ? { details } : {}) });
+}
+
+function tokensMatch(expected: string, presented: string) {
+  const expectedBuffer = Buffer.from(expected);
+  const presentedBuffer = Buffer.from(presented);
+  return (
+    expectedBuffer.length === presentedBuffer.length &&
+    timingSafeEqual(expectedBuffer, presentedBuffer)
+  );
 }
 
 function requireEditorialToken(
@@ -53,7 +92,7 @@ function requireEditorialToken(
       503,
       "Editorial API is not configured. Set EDITORIAL_ADMIN_TOKEN on the server.",
     );
-  if (!presented || presented !== expected)
+  if (!presented || !tokensMatch(expected, presented))
     return sendError(res, 401, "Valid editorial credentials are required.");
   next();
 }
@@ -636,6 +675,20 @@ editorial.post("/tags", async (req, res) => {
 });
 
 app.use("/api/editorial", editorial);
+
+const distDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../dist",
+);
+if (existsSync(distDir)) {
+  app.use(express.static(distDir, { index: "index.html", redirect: false }));
+  app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.startsWith("/api/")) {
+      return res.sendFile(path.join(distDir, "index.html"));
+    }
+    return next();
+  });
+}
 
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (error instanceof multer.MulterError)

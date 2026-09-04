@@ -1,23 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url><loc>https://world-encyclopedia.example/ar/</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/" /></url>
-  <url><loc>https://world-encyclopedia.example/en/</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/search</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/search" /></url>
-  <url><loc>https://world-encyclopedia.example/en/search</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/search" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/about</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/about" /></url>
-  <url><loc>https://world-encyclopedia.example/en/about</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/about" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/contact</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/contact" /></url>
-  <url><loc>https://world-encyclopedia.example/en/contact</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/en/contact" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/privacy</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/privacy" /></url>
-  <url><loc>https://world-encyclopedia.example/en/privacy</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/privacy" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/terms</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/terms" /></url>
-  <url><loc>https://world-encyclopedia.example/en/terms</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/terms" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/editorial-policy</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/editorial-policy" /></url>
-  <url><loc>https://world-encyclopedia.example/en/editorial-policy</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/editorial-policy" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/sources</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/sources" /></url>
-  <url><loc>https://world-encyclopedia.example/en/sources</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/sources" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/corrections</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/corrections" /></url>
-  <url><loc>https://world-encyclopedia.example/en/corrections</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/corrections" /></url>
-  <url><loc>https://world-encyclopedia.example/ar/copyright</loc><xhtml:link rel="alternate" hreflang="en" href="https://world-encyclopedia.example/en/copyright" /></url>
-  <url><loc>https://world-encyclopedia.example/en/copyright</loc><xhtml:link rel="alternate" hreflang="ar" href="https://world-encyclopedia.example/ar/copyright" /></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- The production build writes absolute URLs from SITE_URL. -->
 </urlset>

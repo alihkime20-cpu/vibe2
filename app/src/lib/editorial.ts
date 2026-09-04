@@ -1,5 +1,5 @@
 export const EDITORIAL_API_ORIGIN = (
-  import.meta.env.VITE_EDITORIAL_API_ORIGIN || "http://localhost:8787"
+  import.meta.env.VITE_EDITORIAL_API_ORIGIN || ""
 ).replace(/\/$/, "");
 
 export interface EditorialTranslationInput {

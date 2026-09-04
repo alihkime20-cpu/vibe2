@@ -3,5 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-# Replace the example origin with the verified production domain before launch.
-Sitemap: https://world-encyclopedia.example/sitemap.xml
+# The production build writes an absolute Sitemap URL when SITE_URL is set.
