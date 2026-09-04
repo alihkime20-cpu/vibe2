@@ -19,6 +19,7 @@ describe("encyclopedia migration contract", () => {
       "20260901002000_search_security.sql",
       "20260901003000_security_hardening.sql",
       "20260901004000_foreign_key_indexes.sql",
+      "20260903000000_phase2_listing_indexes.sql",
     ]);
   });
 

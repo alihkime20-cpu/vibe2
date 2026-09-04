@@ -17,5 +17,12 @@
     "jsx": "react-jsx",
     "types": ["vite/client", "node"]
   },
-  "include": ["app/src", "database/types", "scripts", "vitest.config.ts"]
+  "include": [
+    "app/src",
+    "database/types",
+    "server",
+    "tests",
+    "scripts",
+    "vitest.config.ts"
+  ]
 }

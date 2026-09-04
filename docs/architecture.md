@@ -2,7 +2,7 @@
 
 ## النطاق
 
-هذه المرحلة تبني أساس موسوعة عالمية متعددة اللغات دون توليد محتوى جماعي أو بناء واجهة نهائية كبيرة. التطبيق عبارة عن واجهة Vite/React مستقلة، بينما PostgreSQL عبر Supabase هو مصدر البيانات الرئيسي. لا يعتمد الكود الجديد على OAuth أو Forge أو تخزين Manus، ويمكن تشغيله محليًا أو على استضافة Node/Vite قياسية.
+هذه المرحلة تبني واجهة موسوعية عامة وطبقة تحرير خادمية لموسوعة عالمية متعددة اللغات دون توليد محتوى جماعي. التطبيق عبارة عن واجهة Vite/React مستقلة، بينما PostgreSQL عبر Supabase هو مصدر البيانات الرئيسي. لا يعتمد الكود الجديد على OAuth أو Forge أو تخزين Manus، ويمكن تشغيله محليًا أو على استضافة Node/Vite قياسية.
 
 ## القرارات المعمارية
 
@@ -27,14 +27,14 @@ React/Vite static client
 Supabase PostgreSQL + RLS + PGroonga
         │
         ├── Supabase Storage (encyclopedia-media)
-        └── future editorial worker / service-role ingestion
+        └── Express Editorial API / service-role ingestion
 ```
 
-الواجهة الحالية ليست لوحة تحرير ولا تنشئ مقالات. وهي تعرض حالة الاتصال فقط لتقليل مساحة المرحلة الأولى، مع ترك API العام في Supabase جاهزًا لاستخدام صفحات الموسوعة لاحقًا.
+الواجهة العامة تعرض الصفحات متعددة المسارات والبحث والمحتوى المنشور، بينما توجد لوحة تحرير منفصلة على `/admin` لا تظهر في التنقل العام. عمليات الكتابة والتحرير والرفع تمر عبر Express Editorial API محمي برمز خادمي، ولا تنفذها الواجهة العامة مباشرة.
 
 ## قابلية النقل
 
-الإعدادات الوحيدة المطلوبة للتطبيق هي `VITE_SUPABASE_URL` و`VITE_SUPABASE_ANON_KEY`. لا توجد أسرار داخل المستودع. أما عمليات الكتابة والتحرير المستقبلية فتستخدم `SUPABASE_URL` و`SUPABASE_SERVICE_ROLE_KEY` على خادم آمن أو وظيفة Edge، ولا يجوز وضع service-role key في المتصفح.
+إعدادات التطبيق العامة هي `VITE_SUPABASE_URL` و`VITE_SUPABASE_ANON_KEY`. يحتاج خادم التحرير إلى `SUPABASE_URL` و`SUPABASE_SERVICE_ROLE_KEY` و`EDITORIAL_ADMIN_TOKEN`، وتبقى هذه القيم خارج Vite والمتصفح. تستمر RLS كطبقة دفاع، بينما الخادم الموثوق هو المسؤول عن الكتابة وحفظ revisions والوسائط.
 
 يتم حفظ كل DDL في `database/migrations/` بصيغة SQL قياسية. يمكن تطبيقها من Supabase Dashboard أو CLI أو أي اتصال PostgreSQL آمن، ثم إجراء backup/restore عبر أدوات PostgreSQL القياسية. هذا يحقق مطلب عدم الارتباط بخدمة Manus، مع الاحتفاظ بمزايا Supabase الخاصة بقاعدة البيانات والتخزين.
 

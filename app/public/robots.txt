@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api/
 
-Sitemap: https://example.com/sitemap.xml
+# Replace the example origin with the verified production domain before launch.
+Sitemap: https://world-encyclopedia.example/sitemap.xml
